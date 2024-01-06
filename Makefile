@@ -12,7 +12,13 @@ VERSION ?= 22.03.5
 BOARD := ath79
 SUBTARGET := tiny
 SOC := qca9563
-BUILDER := openwrt-imagebuilder-$(VERSION)-$(BOARD)-$(SUBTARGET).Linux-x86_64
+ifeq ($(VERSION),SNAPSHOT)
+	BUILDER := openwrt-imagebuilder-$(BOARD)-$(SUBTARGET).Linux-x86_64
+	BUILDER_URL := https://downloads.openwrt.org/snapshots/targets/$(BOARD)/$(SUBTARGET)/$(BUILDER).tar.xz
+else
+	BUILDER := openwrt-imagebuilder-$(VERSION)-$(BOARD)-$(SUBTARGET).Linux-x86_64
+	BUILDER_URL := https://downloads.openwrt.org/releases/$(VERSION)/targets/$(BOARD)/$(SUBTARGET)/$(BUILDER).tar.xz
+endif
 PROFILES := tplink_tl-wpa8630p-v2.0-eu tplink_tl-wpa8630p-v2.1-eu tplink_tl-wpa8630p-v2-int 
 PACKAGES := luci wpad-basic luci-app-commands open-plc-utils-plctool open-plc-utils-plcrate open-plc-utils-hpavkeys -libustream-wolfssl -wpad-basic-wolfssl -ca-certificates -ppp -ppp-mod-pppoe -luci-proto-ppp
 EXTRA_IMAGE_NAME := patch
@@ -30,7 +36,7 @@ all: images
 
 $(BUILD_DIR)/downloads/$(BUILDER).tar.xz:
 	mkdir -p $(BUILD_DIR)/downloads
-	cd $(BUILD_DIR)/downloads && curl $(ALL_CURL_OPTS) -O https://downloads.openwrt.org/releases/$(VERSION)/targets/$(BOARD)/$(SUBTARGET)/$(BUILDER).tar.xz
+	cd $(BUILD_DIR)/downloads && curl $(ALL_CURL_OPTS) -O $(BUILDER_URL)
 $(BUILD_DIR)/$(BUILDER): $(BUILD_DIR)/downloads/$(BUILDER).tar.xz
 	cd $(BUILD_DIR) && tar -xf downloads/$(BUILDER).tar.xz
 	
