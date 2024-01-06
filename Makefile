@@ -20,7 +20,7 @@ else
 	BUILDER_URL := https://downloads.openwrt.org/releases/$(VERSION)/targets/$(BOARD)/$(SUBTARGET)/$(BUILDER).tar.xz
 endif
 PROFILES := tplink_tl-wpa8630p-v2.0-eu tplink_tl-wpa8630p-v2.1-eu tplink_tl-wpa8630p-v2-int 
-PACKAGES := luci wpad-basic luci-app-commands open-plc-utils-plctool open-plc-utils-plcrate open-plc-utils-hpavkeys -libustream-wolfssl -wpad-basic-wolfssl -ca-certificates -ppp -ppp-mod-pppoe -luci-proto-ppp
+PACKAGES ?= luci wpad-basic luci-app-commands open-plc-utils-plctool open-plc-utils-plcrate open-plc-utils-hpavkeys -libustream-wolfssl -wpad-basic-wolfssl -ca-certificates -ppp -ppp-mod-pppoe -luci-proto-ppp
 EXTRA_IMAGE_NAME := patch
 
 BUILD_DIR := build
