@@ -28,14 +28,10 @@ OUTPUT_DIR := $(BUILD_DIR)/$(BUILDER)/bin/targets/$(BOARD)/$(SUBTARGET)
 all: images
 
 
-$(BUILD_DIR)/downloads:
-	mkdir -p $(BUILD_DIR)/downloads.tmp
-	cd $(BUILD_DIR)/downloads.tmp && curl $(ALL_CURL_OPTS) -O https://downloads.openwrt.org/releases/$(VERSION)/targets/$(BOARD)/$(SUBTARGET)/$(BUILDER).tar.xz
-	mv $(BUILD_DIR)/downloads.tmp $(BUILD_DIR)/downloads
-$(BUILDER).tar.xz:
-
-
-$(BUILD_DIR)/$(BUILDER): $(BUILD_DIR)/downloads
+$(BUILD_DIR)/downloads/$(BUILDER).tar.xz:
+	mkdir -p $(BUILD_DIR)/downloads
+	cd $(BUILD_DIR)/downloads && curl $(ALL_CURL_OPTS) -O https://downloads.openwrt.org/releases/$(VERSION)/targets/$(BOARD)/$(SUBTARGET)/$(BUILDER).tar.xz
+$(BUILD_DIR)/$(BUILDER): $(BUILD_DIR)/downloads/$(BUILDER).tar.xz
 	cd $(BUILD_DIR) && tar -xf downloads/$(BUILDER).tar.xz
 	
 	# Fetch firmware utility sources to apply patches
