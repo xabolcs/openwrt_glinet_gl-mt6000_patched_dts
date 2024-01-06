@@ -8,7 +8,7 @@
 
 ALL_CURL_OPTS := $(CURL_OPTS) -L --fail --create-dirs
 
-VERSION := 22.03.5
+VERSION ?= 22.03.5
 BOARD := ath79
 SUBTARGET := tiny
 SOC := qca9563
