@@ -8,7 +8,7 @@
 
 ALL_CURL_OPTS := $(CURL_OPTS) -L --fail --create-dirs
 
-VERSION ?= 23.05.0
+VERSION ?= 23.05-SNAPSHOT
 BOARD := mediatek
 SUBTARGET := filogic
 ifeq ($(VERSION),SNAPSHOT)
@@ -18,8 +18,8 @@ else
 	BUILDER := openwrt-imagebuilder-$(VERSION)-$(BOARD)-$(SUBTARGET).Linux-x86_64
 	BUILDER_URL := https://downloads.openwrt.org/releases/$(VERSION)/targets/$(BOARD)/$(SUBTARGET)/$(BUILDER).tar.xz
 endif
-PROFILES := tplink_tl-wpa8630p-v2.0-eu tplink_tl-wpa8630p-v2.1-eu tplink_tl-wpa8630p-v2-int 
-PACKAGES ?= luci wpad-basic luci-app-commands open-plc-utils-plctool open-plc-utils-plcrate open-plc-utils-hpavkeys -libustream-wolfssl -wpad-basic-wolfssl -ca-certificates -ppp -ppp-mod-pppoe -luci-proto-ppp
+PROFILES := glinet_gl-mt6000
+PACKAGES ?= luci luci-app-attendedsysupgrade auc
 EXTRA_IMAGE_NAME := patch
 
 BUILD_DIR := build
@@ -55,15 +55,17 @@ $(BUILD_DIR)/$(BUILDER)/.targetinfo: $(BUILD_DIR)/linux-include $(BUILD_DIR)/$(B
 
 
 DTS_INCLUDE_DEPENDENCIES := \
-	dt-bindings/clock/ath79-clk.h \
-	dt-bindings/gpio/gpio.h \
-	dt-bindings/input/input.h \
+	dt-bindings/pinctrl/mt65xx.h \
+	dt-bindings/interrupt-controller/irq.h \
+	dt-bindings/interrupt-controller/arm-gic.h \
 
 $(DTS_INCLUDE_DEPENDENCIES):
 	curl $(ALL_CURL_OPTS) "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/include/$@?h=v$(LINUX_VERSION)" -o $(KDIR)/linux-$(LINUX_VERSION)/include/$@
 
 $(BUILD_DIR)/linux-include: $(BUILD_DIR)/$(BUILDER) $(DTS_INCLUDE_DEPENDENCIES)
 	# Fetch DTS include dependencies
+	curl $(ALL_CURL_OPTS) "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/include/dt-bindings/clock/mt7986-clk.h?h=v6.1.71" -o $(KDIR)/linux-$(LINUX_VERSION)/include/dt-bindings/clock/mt7986-clk.h
+	curl $(ALL_CURL_OPTS) "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/include/dt-bindings/reset/mt7986-resets.h?h=v6.1.71" -o $(KDIR)/linux-$(LINUX_VERSION)/include/dt-bindings/reset/mt7986-resets.h
 	curl $(ALL_CURL_OPTS) "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/include/uapi/linux/input-event-codes.h?h=v$(LINUX_VERSION)" -o $(KDIR)/linux-$(LINUX_VERSION)/include/dt-bindings/input/linux-event-codes.h
 	touch $(BUILD_DIR)/linux-include
 
