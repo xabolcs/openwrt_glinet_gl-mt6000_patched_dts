@@ -1,0 +1,57 @@
+From ae5169265760ad13f9361b990c234a785932135c Mon Sep 17 00:00:00 2001
+From: Hannu Nyman <hannu.nyman@iki.fi>
+Date: Sat, 6 Jan 2024 19:59:13 +0200
+Subject: [PATCH] mediatek: GL-MT6000: Add missing LED state definitions
+
+Adjust LED names and provide the OpenWrt status indicator aliases
+to actually use LEDs by the OpenWrt boot & sysupgrade processes.
+
+* Name both LEDs clearly by the color
+* Add the missing OpenWrt LED status indicator aliases and
+  remove the now unnecessary default status from blue LED
+
+After this commit, the LEDs are used as:
+
+* bootloader, really early Linux boot: blue LED is on
+* preinit/failsafe: white LED blinks rapidly
+* late boot: white LED blinks slowly
+* boot completed, running normally: blue LED is on
+
+* sysupgrade: white LED blinks
+
+Signed-off-by: Hannu Nyman <hannu.nyman@iki.fi>
+---
+ target/linux/mediatek/dts/mt7986a-glinet-gl-mt6000.dts | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
+
+diff --git a/target/linux/mediatek/dts/mt7986a-glinet-gl-mt6000.dts b/target/linux/mediatek/dts/mt7986a-glinet-gl-mt6000.dts
+index fded507039b26..9a7031df539ab 100644
+--- a/target/linux/mediatek/dts/mt7986a-glinet-gl-mt6000.dts
++++ b/target/linux/mediatek/dts/mt7986a-glinet-gl-mt6000.dts
+@@ -13,6 +13,10 @@
+ 
+ 	aliases {
+ 		serial0 = &uart0;
++		led-boot = &led_white;
++		led-failsafe = &led_white;
++		led-running = &led_blue;
++		led-upgrade = &led_white;
+ 	};
+ 
+ 	chosen {
+@@ -51,13 +55,12 @@
+ 	leds {
+ 		compatible = "gpio-leds";
+ 
+-		led_run: led@0 {
++		led_blue: led@0 {
+ 			label = "blue:run";
+ 			gpios = <&pio 38 GPIO_ACTIVE_LOW>;
+-			default-state = "on";
+ 		};
+ 
+-		led@1 {
++		led_white: led@1 {
+ 			label = "white:system";
+ 			gpios = <&pio 37 GPIO_ACTIVE_LOW>;
+ 		};

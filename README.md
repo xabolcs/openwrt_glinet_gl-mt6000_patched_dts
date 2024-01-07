@@ -10,6 +10,7 @@ After installing, the device will be similar to the official OpenWrt image. You 
 ## Changes compared to the official OpenWrt firmware
 
 * Applied [patches](./patches/)
+  * hnyman's LED patch from [PR-14355](https://github.com/openwrt/openwrt/pull/14355)
 * LuCI, [Attended Sysupgrade](https://openwrt.org/docs/guide-user/installation/attended.sysupgrade)
 * my favourite red prompt
 * @obsy's [sysinfo](https://github.com/obsy/packages/blob/master/sysinfo/files/sbin/sysinfo.sh)
@@ -44,3 +45,7 @@ Thanks to @jwmullally for creating this nice addition to ImageBuilder!
 * [Custom DTS / DTB building with ImageBuilder](http://lists.openwrt.org/pipermail/openwrt-devel/2021-March/034239.html)
 * [jwmullally/openwrt_wpa8630p_v2_fullmem](https://github.com/jwmullally/openwrt_wpa8630p_v2_fullmem)
 * [jwmullally/openwrt_wpa8630pv2_patched_firmware](https://github.com/jwmullally/openwrt_wpa8630pv2_patched_firmware)
+
+### Thanks to @hnyman.
+
+For fixing the LED functionality [on the first day](https://forum.openwrt.org/t/gl-mt6000-discussions/173524/311) after flashing OpenWrt to GL-MT6000! 🙏

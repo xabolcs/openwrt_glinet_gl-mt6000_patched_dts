@@ -32,11 +32,13 @@ OUTPUT_DIR := $(BUILD_DIR)/$(BUILDER)/bin/targets/$(BOARD)/$(SUBTARGET)
 
 all: images
 
+patches/PR-%.patch: .PHONY
+	curl $(ALL_CURL_OPTS) "https://github.com/openwrt/openwrt/pull/$*.patch" -o patches/PR-$*.patch
 
 $(BUILD_DIR)/downloads/$(BUILDER).tar.xz:
 	mkdir -p $(BUILD_DIR)/downloads
 	cd $(BUILD_DIR)/downloads && curl $(ALL_CURL_OPTS) -O $(BUILDER_URL)
-$(BUILD_DIR)/$(BUILDER): $(BUILD_DIR)/downloads/$(BUILDER).tar.xz
+$(BUILD_DIR)/$(BUILDER): $(BUILD_DIR)/downloads/$(BUILDER).tar.xz patches/PR-14355.patch
 	cd $(BUILD_DIR) && tar -xf downloads/$(BUILDER).tar.xz
 	
 	# Apply all patches
@@ -58,6 +60,9 @@ DTS_INCLUDE_DEPENDENCIES := \
 	dt-bindings/pinctrl/mt65xx.h \
 	dt-bindings/interrupt-controller/irq.h \
 	dt-bindings/interrupt-controller/arm-gic.h \
+	dt-bindings/phy/phy.h \
+	dt-bindings/gpio/gpio.h \
+	dt-bindings/input/input.h \
 
 $(DTS_INCLUDE_DEPENDENCIES):
 	curl $(ALL_CURL_OPTS) "https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/plain/include/$@?h=v$(LINUX_VERSION)" -o $(KDIR)/linux-$(LINUX_VERSION)/include/$@
