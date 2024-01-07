@@ -51,6 +51,7 @@ $(BUILD_DIR)/$(BUILDER): $(BUILD_DIR)/downloads/$(BUILDER).tar.xz
 	cd $(BUILD_DIR)/$(BUILDER) && gcc -Wall -o staging_dir/host/bin/tplink-safeloader tools/firmware-utils/src/tplink-safeloader.c -lcrypto -lssl
 	cd $(BUILD_DIR)/$(BUILDER) && ln -sf /usr/bin/cpp staging_dir/host/bin/mips-openwrt-linux-musl-cpp
 	
+$(BUILD_DIR)/$(BUILDER)/.targetinfo: $(BUILD_DIR)/linux-include $(BUILD_DIR)/$(BUILDER)
 	# Regenerate .targetinfo
 	cd $(BUILD_DIR)/$(BUILDER) && make -f include/toplevel.mk TOPDIR="$(TOPDIR)" prepare-tmpinfo || true
 	cd $(BUILD_DIR)/$(BUILDER) && cp -f tmp/.targetinfo .targetinfo
@@ -70,7 +71,7 @@ $(BUILD_DIR)/linux-include: $(BUILD_DIR)/$(BUILDER) $(DTS_INCLUDE_DEPENDENCIES)
 	touch $(BUILD_DIR)/linux-include
 
 
-images: $(BUILD_DIR)/$(BUILDER) $(BUILD_DIR)/linux-include
+images: $(BUILD_DIR)/$(BUILDER)/.targetinfo
 	# Build this device's DTB and firmware kernel image. Uses the official kernel build as a base.
 	cd $(BUILD_DIR)/$(BUILDER) && $(foreach PROFILE,$(PROFILES),\
 	    env PATH=$(PATH) make --trace -C target/linux/$(BOARD)/image $(KDIR)/$(PROFILE)-kernel.bin TOPDIR="$(TOPDIR)" INCLUDE_DIR="$(TOPDIR)/include" TARGET_BUILD=1 BOARD="$(BOARD)" SUBTARGET="$(SUBTARGET)" PROFILE="$(PROFILE)" DEVICE_DTS="$(SOC)_$(PROFILE)"\
