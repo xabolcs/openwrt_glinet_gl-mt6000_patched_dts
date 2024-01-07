@@ -8,10 +8,9 @@
 
 ALL_CURL_OPTS := $(CURL_OPTS) -L --fail --create-dirs
 
-VERSION ?= 22.03.5
-BOARD := ath79
-SUBTARGET := tiny
-SOC := qca9563
+VERSION ?= 23.05.0
+BOARD := mediatek
+SUBTARGET := filogic
 ifeq ($(VERSION),SNAPSHOT)
 	BUILDER := openwrt-imagebuilder-$(BOARD)-$(SUBTARGET).Linux-x86_64
 	BUILDER_URL := https://downloads.openwrt.org/snapshots/targets/$(BOARD)/$(SUBTARGET)/$(BUILDER).tar.xz
@@ -25,7 +24,7 @@ EXTRA_IMAGE_NAME := patch
 
 BUILD_DIR := build
 TOPDIR := $(CURDIR)/$(BUILD_DIR)/$(BUILDER)
-KDIR := $(TOPDIR)/build_dir/target-mips_24kc_musl/linux-$(BOARD)_$(SUBTARGET)
+KDIR := $(TOPDIR)/build_dir/target-aarch64_cortex-a53_musl/linux-$(BOARD)_$(SUBTARGET)
 PATH := $(TOPDIR)/staging_dir/host/bin:$(PATH)
 LINUX_VERSION = $(shell sed -n -e '/Linux-Version: / {s/Linux-Version: //p;q}' $(BUILD_DIR)/$(BUILDER)/.targetinfo)
 OUTPUT_DIR := $(BUILD_DIR)/$(BUILDER)/bin/targets/$(BOARD)/$(SUBTARGET)
@@ -40,20 +39,18 @@ $(BUILD_DIR)/downloads/$(BUILDER).tar.xz:
 $(BUILD_DIR)/$(BUILDER): $(BUILD_DIR)/downloads/$(BUILDER).tar.xz
 	cd $(BUILD_DIR) && tar -xf downloads/$(BUILDER).tar.xz
 	
-	# Fetch firmware utility sources to apply patches
-	cd $(BUILD_DIR)/$(BUILDER) && curl $(ALL_CURL_OPTS) "https://git.openwrt.org/?p=openwrt/openwrt.git;hb=refs/tags/v21.02.3;a=blob_plain;f=tools/firmware-utils/src/tplink-safeloader.c" -o tools/firmware-utils/src/tplink-safeloader.c
-	cd $(BUILD_DIR)/$(BUILDER) && curl $(ALL_CURL_OPTS) "https://git.openwrt.org/?p=openwrt/openwrt.git;hb=refs/tags/v21.02.3;a=blob_plain;f=tools/firmware-utils/src/md5.h" -o tools/firmware-utils/src/md5.h
-	
 	# Apply all patches
 	$(foreach file, $(sort $(wildcard patches/*.patch)), patch -d $(BUILD_DIR)/$(BUILDER) --posix -p1 < $(file);)
 	
 	# Build tools
-	cd $(BUILD_DIR)/$(BUILDER) && gcc -Wall -o staging_dir/host/bin/tplink-safeloader tools/firmware-utils/src/tplink-safeloader.c -lcrypto -lssl
-	cd $(BUILD_DIR)/$(BUILDER) && ln -sf /usr/bin/cpp staging_dir/host/bin/mips-openwrt-linux-musl-cpp
-	
+	cd $(BUILD_DIR)/$(BUILDER) && ln -sf /usr/bin/cpp staging_dir/host/bin/aarch64-openwrt-linux-musl-cpp
+	mkdir -p $(BUILD_DIR)/$(BUILDER)/tmp
+
 $(BUILD_DIR)/$(BUILDER)/.targetinfo: $(BUILD_DIR)/linux-include $(BUILD_DIR)/$(BUILDER)
 	# Regenerate .targetinfo
-	cd $(BUILD_DIR)/$(BUILDER) && make -f include/toplevel.mk TOPDIR="$(TOPDIR)" prepare-tmpinfo || true
+	touch -d 2023-12-31 $(BUILD_DIR)/$(BUILDER)/tmp/.packageauxvars
+	cd $(BUILD_DIR)/$(BUILDER) && touch staging_dir/host/.prereq-build tmp/.config-feeds.in
+	cd $(BUILD_DIR)/$(BUILDER) && make -f include/toplevel.mk TOPDIR="$(TOPDIR)" prepare-tmpinfo
 	cd $(BUILD_DIR)/$(BUILDER) && cp -f tmp/.targetinfo .targetinfo
 
 
@@ -74,8 +71,12 @@ $(BUILD_DIR)/linux-include: $(BUILD_DIR)/$(BUILDER) $(DTS_INCLUDE_DEPENDENCIES)
 images: $(BUILD_DIR)/$(BUILDER)/.targetinfo
 	# Build this device's DTB and firmware kernel image. Uses the official kernel build as a base.
 	cd $(BUILD_DIR)/$(BUILDER) && $(foreach PROFILE,$(PROFILES),\
-	    env PATH=$(PATH) make --trace -C target/linux/$(BOARD)/image $(KDIR)/$(PROFILE)-kernel.bin TOPDIR="$(TOPDIR)" INCLUDE_DIR="$(TOPDIR)/include" TARGET_BUILD=1 BOARD="$(BOARD)" SUBTARGET="$(SUBTARGET)" PROFILE="$(PROFILE)" DEVICE_DTS="$(SOC)_$(PROFILE)"\
-	;)
+	{\
+		set -x;\
+		export DTS_NAME=$$(echo $(PROFILE) | tr _ -);\
+		export DEVICE_DTS=$$(find target/linux/mediatek/dts/ -name '*'$${DTS_NAME}.dts -exec basename {} .dts \; -quit);\
+		env PATH=$(PATH) make --trace -C target/linux/$(BOARD)/image $(KDIR)/$(PROFILE)-kernel.bin TOPDIR="$(TOPDIR)" INCLUDE_DIR="$(TOPDIR)/include" TARGET_BUILD=1 BOARD="$(BOARD)" SUBTARGET="$(SUBTARGET)" PROFILE="$(PROFILE)" DEVICE_DTS="$${DEVICE_DTS}"\
+	;})
 	
 	# Use ImageBuilder as normal
 	cd $(BUILD_DIR)/$(BUILDER) && $(foreach PROFILE,$(PROFILES),\
